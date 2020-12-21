@@ -349,11 +349,13 @@ run;
 
 /* 7. GENERATE PNG FROM SVG */
 
+%let save_dir = /home/sasdemo;
+
 options set=PATH="/var/lib/snapd/snap/bin/:$PATH";
 
 %macro transform_image(name, folder);
 
- 	filename timg pipe "inkscape --export-filename=/home/sasdemo/&folder/&name..png /home/sasdemo/&folder/&name..svg";
+ 	filename timg pipe "inkscape --export-filename=&save_dir/&folder/&name..png &save_dir/&folder/&name..svg";
 	data _null_;
 		infile timg;
 		input;
@@ -390,7 +392,7 @@ run;
 
 	data _NULL_;
 	 	dcl odsout obj();
-	 	obj.image(file:"/home/sasdemo/&folder/&name..png", height:"800", width:"800");
+	 	obj.image(file:"&save_dir/&folder/&name..png", height:"800", width:"800");
 	run;
 
 %mend;
@@ -414,7 +416,7 @@ data _null_;
 run;
 
 
-ods powerpoint file="/home/sasdemo/&jobid/new_ppt.pptx";
+ods powerpoint file="&save_dir/&jobid/new_ppt.pptx";
 
 %inc ppt / source2;  
 
