@@ -1,0 +1,2 @@
+## Streaming weather data into SAS Event Stream Processing from Azure
+This repository contains code files supporting the SAS Community library artilce:  [Streaming weather data into SAS Event Stream Processing from Azure](https://communities.sas.com/t5/tkb/articleeditorpage/tkb-id/library-playpen/message-uid/710250) by Tom Tuning.
