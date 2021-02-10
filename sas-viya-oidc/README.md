@@ -2,7 +2,7 @@
 
 Identity server 4 sample code
 
-After executing the IdS.csproj in Visual Studio, it's going to create an identity server 4 for you. Be aware Visual Studio is going to ask to you install some libraries before executing the code. Just accept all and execute with IIS Express using port 44397 (or any port you want) by editing properties/launchSettings.json on line 6 and 7.
+After executing the IdS.csproj in Visual Studio, it's going to create an identity server 4 for you. Be aware Visual Studio is going to ask to you install some libraries before executing the code. Just accept all and execute with IIS Express using port 44397 (or any port you want) by editing properties/launchSettings.json on line 7 and 8.
 
 In case you need to generate your own certificate (beyond localhost, default on IIS Express), you can generate your self signed certificate to IIS Express using power shell (just change "localhost" to the name you want to inside the code):
 https://gist.github.com/camieleggermont/5b2971a96e80a658863106b21c479988
