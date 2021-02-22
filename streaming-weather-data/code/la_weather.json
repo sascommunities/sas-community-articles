@@ -1,0 +1,310 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Initialize_array_of_locations": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "weather_locations",
+                            "type": "array",
+                            "value": [
+                                "35.79, -78.78",
+                                "35.78, -78.75"
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Initialize_epoch": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "epoch",
+                            "type": "integer",
+                            "value": "@ticks('1970-01-01T00:00:00Z')"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_jsonobject": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_jsonobject": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "jsonobject",
+                            "type": "object",
+                            "value": {}
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_loop_counter": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_loop_counter": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "counter",
+                            "type": "integer",
+                            "value": 0
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_array_of_locations": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "loop_weather_locations": {
+                "actions": {
+                    "Compose": {
+                        "inputs": {
+                            "Device_Subtype": "Virtual",
+                            "Latitude": "@trim(split(variables('weather_locations')?[variables('counter')],',')?[0])",
+                            "Longitude": "@trim(split(variables('weather_locations')?[variables('counter')],',')?[1])",
+                            "deviceID": "@concat('weather_location_',string(variables('counter')))",
+                            "humidity": "@outputs('Parse_JSON')?['body']?['forecasts']?[0]?['relativeHumidity']",
+                            "location": "@items('loop_weather_locations')",
+                            "rain": "@outputs('Parse_JSON')?['body']?['forecasts']?[0]?['rain']?['value']",
+                            "rainplus1": "@outputs('Parse_JSON')?['body']?['forecasts']?[1]?['rain']?['value']",
+                            "rainplus2": "@outputs('Parse_JSON')?['body']?['forecasts']?[2]?['rain']?['value']",
+                            "rainplus3": "@outputs('Parse_JSON')?['body']?['forecasts']?[3]?['rain']?['value']",
+                            "rainplus4": "@outputs('Parse_JSON')?['body']?['forecasts']?[4]?['rain']?['value']",
+                            "rainplus5": "@outputs('Parse_JSON')?['body']?['forecasts']?[5]?['rain']?['value']",
+                            "rainplus6": "@outputs('Parse_JSON')?['body']?['forecasts']?[6]?['rain']?['value']",
+                            "rainprobability": "@outputs('Parse_JSON')?['body']?['forecasts']?[0]?['rainProbability']",
+                            "rainprobabilityplus1": "@outputs('Parse_JSON')?['body']?['forecasts']?[1]?['rainProbability']",
+                            "rainprobabilityplus2": "@outputs('Parse_JSON')?['body']?['forecasts']?[2]?['rainProbability']",
+                            "rainprobabilityplus3": "@outputs('Parse_JSON')?['body']?['forecasts']?[3]?['rainProbability']",
+                            "rainprobabilityplus4": "@outputs('Parse_JSON')?['body']?['forecasts']?[4]?['rainProbability']",
+                            "rainprobabilityplus5": "@outputs('Parse_JSON')?['body']?['forecasts']?[5]?['rainProbability']",
+                            "rainprobabilityplus6": "@outputs('Parse_JSON')?['body']?['forecasts']?[6]?['rainProbability']",
+                            "temperature": "@outputs('Parse_JSON')?['body']?['forecasts']?[0]?['temperature']?['value']",
+                            "temperatureplus1": "@outputs('Parse_JSON')?['body']?['forecasts']?[1]?['temperature']?['value']",
+                            "temperatureplus2": "@outputs('Parse_JSON')?['body']?['forecasts']?[2]?['temperature']?['value']",
+                            "temperatureplus3": "@outputs('Parse_JSON')?['body']?['forecasts']?[3]?['temperature']?['value']",
+                            "temperatureplus4": "@outputs('Parse_JSON')?['body']?['forecasts']?[4]?['temperature']?['value']",
+                            "temperatureplus5": "@outputs('Parse_JSON')?['body']?['forecasts']?[5]?['temperature']?['value']",
+                            "temperatureplus6": "@outputs('Parse_JSON')?['body']?['forecasts']?[6]?['temperature']?['value']",
+                            "timestamp": "@div(sub(ticks(outputs('Parse_JSON')?['body']?['forecasts']?[0]?['date']),variables('epoch')),10000000)",
+                            "type": "Rain Gage",
+                            "windspeed": "@outputs('Parse_JSON')?['body']?['forecasts']?[0]?['wind']?['speed']?['value']"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Compose"
+                    },
+                    "HTTP_request_forecast_data": {
+                        "inputs": {
+                            "method": "GET",
+                            "queries": {
+                                "api-version": "1.0",
+                                "duration": "12",
+                                "query": "@{items('loop_weather_locations')}",
+                                "subscription-key": "ssRYdFcoZC8oylxr-B5_N0a7SUwOHlbGk6TsesTnV53Y"
+                            },
+                            "uri": "https://atlas.microsoft.com/weather/forecast/hourly/json"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                    },
+                    "Increment_variable": {
+                        "inputs": {
+                            "name": "counter",
+                            "value": 1
+                        },
+                        "runAfter": {
+                            "Send_event": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "IncrementVariable"
+                    },
+                    "Parse_JSON": {
+                        "inputs": {
+                            "content": "@variables('jsonobject')",
+                            "schema": {
+                                "properties": {
+                                    "forecasts": {
+                                        "items": {
+                                            "properties": {
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "precipitationProbability": {
+                                                    "type": "number"
+                                                },
+                                                "rain": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "rainProbability": {
+                                                    "type": "number"
+                                                },
+                                                "relativeHumidity": {
+                                                    "type": "number"
+                                                },
+                                                "temperature": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "totalLiquid": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "wind": {
+                                                    "properties": {
+                                                        "direction": {
+                                                            "properties": {
+                                                                "degrees": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "localizedDescription": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "speed": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "required": [
+                                                "date",
+                                                "temperature",
+                                                "wind",
+                                                "relativeHumidity",
+                                                "precipitationProbability",
+                                                "rainProbability",
+                                                "totalLiquid",
+                                                "rain"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "Set_variable": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Send_event": {
+                        "inputs": {
+                            "body": {
+                                "ContentData": "@{base64(outputs('Compose'))}"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['eventhubs']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/@{encodeURIComponent('toceventhub')}/events"
+                        },
+                        "runAfter": {
+                            "Compose": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Set_variable": {
+                        "inputs": {
+                            "name": "jsonobject",
+                            "value": "@body('HTTP_request_forecast_data')"
+                        },
+                        "runAfter": {
+                            "HTTP_request_forecast_data": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    }
+                },
+                "foreach": "@variables('weather_locations')",
+                "runAfter": {
+                    "Initialize_epoch": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 1
+                    }
+                },
+                "type": "Foreach"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Hour",
+                    "interval": 1
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "eventhubs": {
+                    "connectionId": "/subscriptions/07493c6b-8b48-4d63-9374-413eee3a73f1/resourceGroups/RG_SAS/providers/Microsoft.Web/connections/eventhubs",
+                    "connectionName": "eventhubs",
+                    "id": "/subscriptions/07493c6b-8b48-4d63-9374-413eee3a73f1/providers/Microsoft.Web/locations/usgovtexas/managedApis/eventhubs"
+                }
+            }
+        }
+    }
+}

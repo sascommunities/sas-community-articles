@@ -1,0 +1,82 @@
+<project name="Weather_Catcher" threads="10" pubsub="auto" heartbeat-interval="1" use-tagged-token="true">
+  <contqueries>
+    <contquery name="cq1">
+      <windows>
+        <window-source pubsub="true" index="pi_EMPTY" insert-only="true" autogen-key="true" name="Kafka_incoming">
+          <schema>
+            <fields>
+              <field name="index_esp" type="int64" key="true"/>
+              <field name="message" type="string"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="kafka" name="kafkainlatest">
+              <description><![CDATA[Just grabs records that have not been read before]]></description>
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <!-- <property name="kafkainitialoffset"><![CDATA[largest]]></property>  -->
+                <property name="kafkaglobalconfig"><![CDATA[security.protocol=SASL_SSL;sasl.username=$ConnectionString;sasl.password=Endpoint=sb://namesspace-weather-catcher.servicebus.usgovcloudapi.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=J5qKcs1mdF2rZ7vTbJZ7FNsNZBxlfsAHa3uLzuqI3Yo=;sasl.mechanism=PLAIN;ssl.ca.location=/etc/pki/tls/cert.pem]]></property>
+                <property name="kafkaconsumergroupid"><![CDATA[lastread]]></property>
+                <!-- <property name="kafkapartition"><![CDATA[-1]]></property>  -->
+                <property name="kafkatype"><![CDATA[opaquestring]]></property>
+                <property name="urlhostport"><![CDATA[notusedwhennotHA]]></property>
+                <property name="kafkahostport"><![CDATA[Namesspace-weather-catcher.servicebus.usgovcloudapi.net:9093]]></property>
+                <property name="kafkatopic"><![CDATA[toceventhub]]></property>
+              </properties>
+            </connector>
+            <connector class="kafka" name="kafkain7days" active="false">
+              <description><![CDATA[Grabs 7 days worth of data]]></description>
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="kafkatype"><![CDATA[opaquestring]]></property>
+                <property name="kafkainitialoffset"><![CDATA[smallest]]></property>
+                <property name="urlhostport"><![CDATA[notusedwhennotHA]]></property>
+                <property name="kafkahostport"><![CDATA[Namesspace-weather-catcher.servicebus.usgovcloudapi.net:9093]]></property>
+                <property name="kafkatopic"><![CDATA[toceventhub]]></property>
+                <property name="kafkapartition"><![CDATA[-1]]></property>
+                <property name="kafkaglobalconfig"><![CDATA[security.protocol=SASL_SSL;sasl.username=$ConnectionString;sasl.password=Endpoint=sb://namesspace-weather-catcher.servicebus.usgovcloudapi.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=J5qKcs1mdF2rZ7vTbJZ7FNsNZBxlfsAHa3uLzuqI3Yo=;sasl.mechanism=PLAIN;ssl.ca.location=/etc/pki/tls/cert.pem]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-functional pubsub="true" index="pi_EMPTY" name="func_parse_json">
+          <description><![CDATA[Parse incoming json into fields.]]></description>
+          <schema>
+            <fields>
+              <field name="index_esp" type="int64" key="true"/>
+              <field name="deviceID" type="string"/>
+              <field name="timestamp" type="stamp"/>
+              <field name="Latitude" type="string"/>
+              <field name="Longitude" type="string"/>
+              <field name="humidity" type="int32"/>
+              <field name="rain" type="double"/>
+              <field name="rainplus1" type="double"/>
+              <field name="temperature" type="double"/>
+              <field name="windspeed" type="double"/>
+            </fields>
+          </schema>
+          <function-context>
+            <properties>
+              <property-json name="jsonData"><![CDATA[$message]]></property-json>
+            </properties>
+            <functions>
+              <function name="deviceID"><![CDATA[json(#jsonData,'deviceID')]]></function>
+              <function name="timestamp"><![CDATA[json(#jsonData,'timestamp')]]></function>
+              <function name="Latitude"><![CDATA[json(#jsonData,'Latitude')]]></function>
+              <function name="Longitude"><![CDATA[json(#jsonData,'Longitude')]]></function>
+              <function name="humidity"><![CDATA[json(#jsonData,'humidity')]]></function>
+              <function name="location"><![CDATA[json(#jsonData,'location')]]></function>
+              <function name="rain"><![CDATA[product(json(#jsonData,'rain'),.0393700787401575)]]></function>
+              <function name="rainplus1"><![CDATA[product(json(#jsonData,'rainplus1'),.0393700787401575)]]></function>
+              <function name="temperature"><![CDATA[json(#jsonData,'temperature')]]></function>
+              <function name="windspeed"><![CDATA[json(#jsonData,'windspeed')]]></function>
+            </functions>
+          </function-context>
+        </window-functional>
+      </windows>
+      <edges>
+        <edge source="Kafka_incoming" target="func_parse_json"/>
+      </edges>
+    </contquery>
+  </contqueries>
+</project>
